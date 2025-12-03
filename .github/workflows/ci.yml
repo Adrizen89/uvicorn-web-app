@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  build-scan:
+  build-scan-sign:
     runs-on: ubuntu-latest
 
     env:
@@ -42,3 +42,24 @@ jobs:
         with:
           name: trivy-report
           path: trivy-report.txt
+
+      # ------------ COSIGN --------------
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.7.0
+
+      - name: Write Cosign keys
+        run: |
+          echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
+          echo "${{ secrets.COSIGN_PUBLIC_KEY }}" > cosign.pub
+
+      - name: Cosign sign image
+        env:
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          cosign sign --key cosign.key ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+      - name: Cosign verify image
+        run: |
+          cosign verify --key cosign.pub ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
