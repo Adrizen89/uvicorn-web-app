@@ -52,6 +52,20 @@ jobs:
         run: |
           echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
           echo "${{ secrets.COSIGN_PUBLIC_KEY }}" > cosign.pub
+      
+      - name: Cosign sign image (local)
+        env:
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          COSIGN_EXPERIMENTAL: "1"
+        run: |
+          cosign sign --key cosign.key --local-image ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+      - name: Cosign verify image (local)
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+        run: |
+          cosign verify --key cosign.pub --local-image ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
 
       - name: Cosign sign image
         env:
