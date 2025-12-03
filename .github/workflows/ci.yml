@@ -1,0 +1,44 @@
+name: CI Docker - Uvicorn Web App
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  build-scan:
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: uvicorn-web-app
+      IMAGE_TAG: ${{ github.sha }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (local only)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+      - name: Run Trivy scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          format: 'table'
+          output: 'trivy-report.txt'
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-report.txt
