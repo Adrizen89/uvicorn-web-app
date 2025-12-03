@@ -16,7 +16,7 @@ jobs:
 
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
+      IMAGE_NAME: adrizen89/uvicorn-web-app
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
